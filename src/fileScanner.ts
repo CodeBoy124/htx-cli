@@ -14,6 +14,7 @@ export default function scanForFiles(config: htxConfig) {
         });
         let files: string[] = [];
         finder.on("match", strPath => {
+            console.log(`Found: ${strPath}`);
             files.push(strPath);
         });
         finder.on("complete", () => {
