@@ -3,6 +3,22 @@ import path from "path";
 
 export const configFileLocation = "./htx_config.json";
 
+export type htxConfig = {
+    environment: "dev" | "prod",
+    extension: {
+        src: string,
+        out: string
+    },
+    directory: {
+        src: string,
+        out: string
+    },
+    constant: {
+        variable: string,
+        props: string
+    }
+};
+
 type jsObject = { [index: string | number | symbol]: any };
 function fillConfiguration(defaults: jsObject, value: jsObject) {
     const keys = Object.keys(defaults);
@@ -20,7 +36,7 @@ function fillConfiguration(defaults: jsObject, value: jsObject) {
     return defaults;
 }
 
-export function readConfig() {
+export function readConfig(): htxConfig {
     const rootPath = process.cwd();
     const configFilePath = path.join(rootPath, configFileLocation);
     if (fs.existsSync(configFilePath)) {
@@ -28,13 +44,13 @@ export function readConfig() {
         const fileContents = fs.readFileSync(configFilePath, 'utf8');
         const customConfig = JSON.parse(fileContents);
         const finalConfig = fillConfiguration(defaultConfig, customConfig);
-        return finalConfig;
+        return finalConfig as htxConfig;
     }
     console.log(`Using default config`);
     return defaultConfig;
 }
 
-const defaultConfig = {
+const defaultConfig: htxConfig = {
     environment: "dev",
     extension: {
         src: "htx",
