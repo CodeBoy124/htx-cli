@@ -1,0 +1,30 @@
+{
+  "name": "htx-cli",
+  "version": "1.0.0",
+  "description": "A cli to convert .htx (different components) files to .php",
+  "main": "./out/index.js",
+  "scripts": {
+    "dev": "tsc && node ./out/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeBoy124/htx-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "htx",
+    "php",
+    "components"
+  ],
+  "author": "CodeBoy124",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodeBoy124/htx-cli/issues"
+  },
+  "homepage": "https://github.com/CodeBoy124/htx-cli#readme",
+  "devDependencies": {
+    "@types/node": "^20.3.1",
+    "typescript": "^5.1.3"
+  }
+}
