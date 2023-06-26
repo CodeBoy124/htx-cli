@@ -1,0 +1,1 @@
+<button onclick="alert('Hello, @<?= $props["user"] ?>');">Greet @<?= $props["user"] ?></button>
