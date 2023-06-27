@@ -6,7 +6,8 @@ run `npm install -g php-htx-cli` to install the cli.
 
 ## cli usage
 You can run `htx init` to create a `htx_config.json` file that you can configure for your liking.
-After that you can run `htx` or `htx run` to scan for htx files and convert them to php
+After that you can run `htx` or `htx run` to scan for htx files and convert them to php.
+You can also use `htx watch` or `htx watch ./path/to/folder/to/watch/` to detect changes and automaticly convert everything
 
 ## htx file usage
 ### importing components

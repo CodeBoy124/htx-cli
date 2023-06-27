@@ -1,6 +1,6 @@
 {
   "name": "php-htx-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A cli to convert .htx (different components) files to .php",
   "main": "./out/index.js",
   "bin": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "tsc && node ./out/index.js",
+    "dev_watch": "tsc && node ./out/index.js watch ./example/pages/",
     "dev_init": "tsc && node ./out/index.js init",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
