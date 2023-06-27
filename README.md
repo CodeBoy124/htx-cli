@@ -30,6 +30,10 @@ By default all components use local data that is not meant to be accessed by any
 You can also define global data like this `$GLOBAL_myVariable`.
 This is data you can access inside any component inside a page
 
+### global and local functions
+When you define a function inside a htx file it will be marked as local.
+If you call a function that is not defined in the htx file it will be global.
+If you create a function and want it to be global you can just prefix it with `GLOBAL_` just like with variables
 
 ### example
 If you want to see what a project could look like you can checkout the example folder.

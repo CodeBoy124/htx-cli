@@ -50,6 +50,8 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         componentChildStack[componentChildStack.length - 1].children += content.join("");
     }
 
+    let localFunctions: string[] = [];
+
     let isInPhp = false;
     let isInString: false | `"` | `'` = false;
 
@@ -174,6 +176,38 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
                 .replace("<uid>", localUid.toString())
                 .replace("<variable>", match[0].slice(1))
             );
+            charIndex += match[0].length - 1;
+            continue;
+        }
+
+        // Create local function
+        if ((match = code.slice(charIndex).match(REGEX.function.define)) != null && isInPhp && isInString == false) {
+            const functionName = match[0].slice("function ".length, -1).trim();
+            if (functionName.startsWith("GLOBAL_")) {
+                addToOutput(`function ${functionName.slice("GLOBAL_".length)}(`);
+                charIndex += match[0].length - 1;
+                continue;
+            }
+            localFunctions.push(functionName);
+            addToOutput(`function ${config.constant.variable
+                .replace("<component>", localComponentName)
+                .replace("<uid>", localUid.toString())
+                .replace("<variable>", functionName)}(`);
+            charIndex += match[0].length - 1;
+            continue;
+        }
+        if ((match = code.slice(charIndex).match(REGEX.function.call)) != null && isInPhp && isInString == false) {
+            const functionName = match[0].slice(0, -1).trim();
+            if ((!functionName.startsWith("GLOBAL_")) && localFunctions.includes(functionName)) {
+                addToOutput(config.constant.variable
+                    .replace("<component>", localComponentName)
+                    .replace("<uid>", localUid.toString())
+                    .replace("<variable>", functionName) + "(");
+            } else if (functionName.startsWith("GLOBAL_")) {
+                addToOutput(functionName.slice("GLOBAL_".length) + "(");
+            } else {
+                addToOutput(functionName + "(");
+            }
             charIndex += match[0].length - 1;
             continue;
         }
