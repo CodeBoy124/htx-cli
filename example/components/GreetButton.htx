@@ -1,1 +1,4 @@
-<button onclick="alert('Hello, @<?= $props["user"] ?>');">Greet @<?= $props["user"] ?></button>
+<?php
+$upper = strtoupper($props["name"]);
+?>
+<button onclick="alert('Hello, @<?= $props["name"] ?>');">Greet @<?= $upper ?></button>
