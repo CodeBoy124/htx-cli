@@ -2,7 +2,7 @@
 A cli to convert htx files (components) to regular php.
 
 ## installation
-run `npm install -g @codeboy124/htx-cli` to install the cli.
+run `npm install -g htx-cli` to install the cli.
 
 ## cli usage
 You can run `htx init` to create a `htx_config.json` file that you can configure for your liking.
