@@ -3,8 +3,13 @@
 <?php
 $name = "user12";
 $name .= "test";
+$someObject = [
+    "title" => [
+        "Home page"
+    ]
+];
 ?>
-<Layout>
+<Layout title=$someObject.title>
     <h1>Hello, there...</h1>
     <GreetButton name=$name />
 </Layout>

@@ -30,10 +30,11 @@ function valueToPhp(value: any, localComponentName: string, localUid: number, co
     }
     if (typeof (value) == "string") {
         if (value[0] == "$") {
+            let [variableName, ...dataParts] = value.split(".");
             return "$" + config.constant.variable
                 .replace("<component>", localComponentName)
                 .replace("<uid>", localUid.toString())
-                .replace("<variable>", value.slice(1));
+                .replace("<variable>", variableName.slice(1)) + ((dataParts.length > 0) ? (dataParts.map(dataPart => `["${dataPart}"]`).join("")) : "");
         }
         if (
             (value[0] != "\"" && value[0] != "'") ||

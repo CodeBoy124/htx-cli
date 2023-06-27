@@ -39,6 +39,11 @@ If you create a function and want it to be global you can just prefix it with `G
 If you want to see what a project could look like you can checkout the example folder.
 It might give you a better idea what everything does.
 
+## Expiremental
+### Object operator 'support'
+You can easily access items of an array inside attributes with the following syntax `attribute-name=$array.key`.
+This is unconventional for php and is therefor expiremental to see if it is any good.
+
 ## contributing
 Feel free to contribute.
 Please be clear what you did and also why.
