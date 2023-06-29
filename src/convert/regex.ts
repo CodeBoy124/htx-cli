@@ -16,6 +16,7 @@ export default {
         open: /^<[A-Z][A-Za-z0-9\-_$]*( [^>]*[^/])?>/,
         close: /^<\/[A-Z][A-Za-z0-9\-_$]*[\n ]*>/,
         single: /^<[A-Z][A-Za-z0-9\-_$]*( [^>]*)?\/>/,
-        children: /^<INNER *\/?>/
+        children: /^<INNER *\/?>/,
+        scopes: /^<SCOPES*( [^>]*)?\/>/
     }
 };
