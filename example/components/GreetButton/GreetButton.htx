@@ -9,5 +9,5 @@ function GLOBAL_globalFunction()
 }
 $upper = someLocalFunction($props["name"]);
 ?>
-<button onclick="alert('Hello, @<?= $props["name"] ?>');">Greet @<?= $upper ?></button>
+<button class="btn" onclick="greet('<?= $props["name"] ?>');">Greet @<?= $upper ?></button>
 <span><?= GLOBAL_globalFunction() ?></span>
