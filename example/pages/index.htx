@@ -1,10 +1,10 @@
 <!-- import Layout from "../components/HomeLayout" -->
-<!-- import "../components/GreetButton" -->
+<!-- import "../components/GreetButton/GreetButton" -->
 <?php
 $name = "user12";
 $name .= "test";
 ?>
-<Layout>
+<Layout title="Example page">
     <h1>Hello, there...</h1>
     <GreetButton name=$name />
 </Layout>

@@ -36,6 +36,12 @@ When you define a function inside a htx file it will be marked as local.
 If you call a function that is not defined in the htx file it will be global.
 If you create a function and want it to be global you can just prefix it with `GLOBAL_` just like with variables
 
+### Adding CSS and JS
+If you have a lot of components you don't want to manually insert all script tags inside your pages, so I created scopes.
+Scoped files will be automaticly imported don't have local and global variables, function or anything else.
+You can use the `<SCOPE />` component and set the type attribute to either "css" or "js".
+If you have a component you want to add scoped js and css to you can create a `.js` or `.css` file with the same name, so if your component is called `MyButton.htx` and you import it with `<!-- import "./MyButton" -->` it will also check if a `MyButton.js` or `MyButton.css` exist.
+
 ### example
 If you want to see what a project could look like you can checkout the example folder.
 It might give you a better idea what everything does.

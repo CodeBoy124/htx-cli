@@ -7,7 +7,9 @@ const waitingChangeTimeSeconds = 5;
 export default function Watch(argv: any) {
     const actualFolderToWatch = path.join(process.cwd(), argv.folder);
     let watchChangeTimeout: any;
-    fs.watch(actualFolderToWatch, (eventType, filename) => {
+    fs.watch(actualFolderToWatch, {
+        recursive: true
+    }, (eventType, filename) => {
         if (!watchChangeTimeout) {
             if (eventType != "change") return;
             console.log(`Change detected for file "${filename}"`);
