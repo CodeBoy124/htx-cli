@@ -29,9 +29,13 @@ function parseImportStatement(match: string, config: htxConfig) {
 
 function convert(code: string, uid: number, props: { [index: string]: any }, children = "", config: htxConfig, filePath: string, parentComponentName: string, parentUid: number, isRoot: boolean = false): {
     output: string,
-    uid: number
+    uid: number,
+    possibleScopes: {
+        css: Set<string>,
+        js: Set<string>
+    }
 } {
-    const localComponentName = path.basename(filePath).slice(0, -("." + config.extension.src).length);
+    const localComponentName = path.basename(filePath, "." + config.extension.src);
     const localUid = uid;
 
     let components: {
@@ -103,11 +107,11 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         // import statement
         if ((match = code.slice(charIndex).match(REGEX.importStatement)) != null && !isInPhp) {
             let { name: componentName, file: componentFileName, fileNameWithoutExtension } = parseImportStatement(match[0], config);
+            const fullPathToFileBase = path.join(path.dirname(path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath)), fileNameWithoutExtension);
             components[componentName] = {
-                relativePath: path.relative(process.cwd(), path.join(path.dirname(filePath), componentFileName)),
-                contents: fs.readFileSync(path.join(path.dirname(filePath), componentFileName), 'utf8')
+                relativePath: path.relative(process.cwd(), fullPathToFileBase),
+                contents: fs.readFileSync(fullPathToFileBase + "." + config.extension.src, 'utf8')
             };
-            const fullPathToFileBase = path.join(path.dirname(filePath), fileNameWithoutExtension);
             possibleScopedCssFiles.add(fullPathToFileBase + ".css");
             possibleScopedJsFiles.add(fullPathToFileBase + ".js");
             charIndex += match[0].length - 1;
@@ -157,7 +161,13 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             uid++;
             if (currentChildStackContent?.component == null) throw new Error(`Cannot access component without a name`);
             if (!(currentChildStackContent?.component in components)) throw new Error(`Unknown component "${currentChildStackContent?.component}"`);
-            let { output: converted, uid: newUid } = convert(components[currentChildStackContent?.component].contents, uid, currentChildStackContent?.attr, currentChildStackContent?.children, config, components[currentChildStackContent?.component].relativePath, localComponentName, localUid);
+            let { output: converted, uid: newUid, possibleScopes } = convert(components[currentChildStackContent?.component].contents, uid, currentChildStackContent?.attr, currentChildStackContent?.children, config, components[currentChildStackContent?.component].relativePath, localComponentName, localUid);
+            possibleScopes.css.forEach(scope => {
+                possibleScopedCssFiles.add(scope);
+            });
+            possibleScopes.js.forEach(scope => {
+                possibleScopedJsFiles.add(scope);
+            });
             uid = newUid;
             addToOutput(converted)
             charIndex += match[0].length - 1;
@@ -172,7 +182,13 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             if (!(tagname in components)) {
                 throw new Error(`Unknown component "${tagname}" in file "${filePath}"`);
             }
-            let { output: converted, uid: newUid } = convert(components[tagname].contents, uid, parseHtmlAttributes(data), "", config, components[tagname].relativePath, localComponentName, localUid);
+            let { output: converted, uid: newUid, possibleScopes } = convert(components[tagname].contents, uid, parseHtmlAttributes(data), "", config, components[tagname].relativePath, localComponentName, localUid);
+            possibleScopes.css.forEach(scope => {
+                possibleScopedCssFiles.add(scope);
+            });
+            possibleScopes.js.forEach(scope => {
+                possibleScopedJsFiles.add(scope);
+            });
             uid = newUid;
             addToOutput(converted);
             charIndex += match[0].length - 1;
@@ -248,7 +264,11 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
     }
     return {
         output: finalOutput,
-        uid
+        uid,
+        possibleScopes: {
+            css: possibleScopedCssFiles,
+            js: possibleScopedJsFiles
+        }
     };
 }
 
