@@ -257,6 +257,12 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         addToOutput(code[charIndex]);
     }
 
+    if (isInString && isInPhp) {
+        addToOutput(`";?>`);
+    } else if (isInPhp) {
+        addToOutput("?>");
+    }
+
     let existingScopes;
     if (isRoot)
         existingScopes = checkForExistingScopes(possibleScopedCssFiles, possibleScopedJsFiles);

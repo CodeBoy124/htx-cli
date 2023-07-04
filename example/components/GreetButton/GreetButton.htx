@@ -11,3 +11,5 @@ $upper = someLocalFunction($props["name"]);
 ?>
 <button class="btn" onclick="greet('<?= $props["name"] ?>');">Greet @<?= $upper ?></button>
 <span><?= GLOBAL_globalFunction() ?></span>
+<?php
+$endOfFileTest = "ok nice";
