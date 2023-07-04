@@ -65,6 +65,8 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
     let isInPhp = false;
     let isInString: false | `"` | `'` = false;
 
+    let skipNext = false;
+
     for (let charIndex = 0; charIndex < code.length; charIndex++) {
         let match;
 
@@ -88,20 +90,28 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             addToOutput("\"");
             continue;
         }
-        if (isInPhp && code[charIndex] == "\"" && isInString == "\"") {
+        if (isInPhp && code[charIndex] == "\"" && isInString == "\"" && !skipNext) {
             isInString = false;
             addToOutput("\"");
             continue;
         }
-        if (isInPhp && code[charIndex] == "'" && !isInString) {
+        if (isInPhp && code[charIndex] == "'" && !isInString && !skipNext) {
             isInString = "'";
             addToOutput("'");
             continue;
         }
-        if (isInPhp && code[charIndex] == "'" && isInString == "'") {
+        if (isInPhp && code[charIndex] == "'" && isInString == "'" && !skipNext) {
             isInString = false;
             addToOutput("'");
             continue;
+        }
+
+        if (isInPhp && isInString != false && code[charIndex] == "\\") {
+            skipNext = true;
+            addToOutput("\\");
+            continue;
+        } else {
+            skipNext = false;
         }
 
         // import statement

@@ -5,7 +5,7 @@ function someLocalFunction($text)
 }
 function GLOBAL_globalFunction()
 {
-    return "<!-- Some global function -->";
+    return "<!-- Some \"global function -->";
 }
 $upper = someLocalFunction($props["name"]);
 ?>
