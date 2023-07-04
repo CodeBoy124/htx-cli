@@ -3,8 +3,9 @@
 <?php
 $name = "user12";
 $name .= "test";
+$GLOBAL_title = "Example page";
 ?>
-<Layout title="Example page">
+<Layout title=$GLOBAL_title>
     <h1>Hello, there...</h1>
     <GreetButton name=$name />
 </Layout>

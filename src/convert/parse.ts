@@ -30,6 +30,9 @@ function valueToPhp(value: any, localComponentName: string, localUid: number, co
     }
     if (typeof (value) == "string") {
         if (value[0] == "$") {
+            if (value.startsWith("$GLOBAL_")) {
+                return "$" + value.slice("$GLOBAL_".length);
+            }
             return "$" + config.constant.variable
                 .replace("<component>", localComponentName)
                 .replace("<uid>", localUid.toString())
