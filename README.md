@@ -13,10 +13,13 @@ You can also use `htx watch` or `htx watch ./path/to/folder/to/watch/` to detect
 ### importing components
 You can import a component using one of two ways.
 You can use the `<!-- import ComponentAlias from "./path/to/file" -->` syntax to import with an alias.
-YOu can also use the `<!-- import "./path/to/file" -->` syntax to just use the file name as the component name
+You can also use the `<!-- import "./path/to/file" -->` syntax to just use the file name as the component name
 
 ### using components
 You can use the components as regular html tags with the addition of one thing. You can pass variables to the component by doing `attribute-name=$myVariable`.
+The system that the program uses keeps track of what is inside a string and how 'nested' some code is. If you want to add two variables you can't do the following: `added=$a + $b`, because of the spaces that make the program expect another attribute. Instead you can do `added=$a+$b` or `added=($a + $b)`. Every value of a property on a component is just php, so you can still use `"text"` and `7` numbers while also allowing you to use php `$a+$b`.
+
+One thing you can't (yet) do when using components is mixing variables inside string like `"some string with $variable"`, because the program currently ignores local and global variables inside strings.
 
 ### accessing properties/attributes inside components
 You can access the `$props` variable (or whatever name you have in your config in `constant.props`).

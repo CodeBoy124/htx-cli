@@ -261,6 +261,11 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         addToOutput("?>");
     }
 
+    if (isRoot) {
+        possibleScopedCssFiles.add(filePath.slice(0, -(("." + config.extension.src).length)) + ".css");
+        possibleScopedJsFiles.add(filePath.slice(0, -(("." + config.extension.src).length)) + ".js");
+    }
+
     let existingScopes;
     if (isRoot)
         existingScopes = checkForExistingScopes(possibleScopedCssFiles, possibleScopedJsFiles);
