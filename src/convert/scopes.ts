@@ -1,8 +1,8 @@
 import fs from "fs";
 
 import REGEX from "./regex";
-import parseHtmlAttributes from "./parse";
 import path from "path";
+import { isTag } from "./tagDetection";
 
 export type Scope = {
     type: "css" | "js",
@@ -29,11 +29,20 @@ export function checkForExistingScopes(css: Set<string>, js: Set<string>): Scope
     return scopes;
 }
 
-function generateScopeCode(propStr: string, scopes: Scope[], isDev: boolean): string {
-    let props = parseHtmlAttributes(propStr);
-    if (!("type" in props)) throw new Error(`No scope type defined in the <SCOPES /> component. Please add a type property with either "css" or "js"`);
-    if (props.type != "\"css\"" && props.type != "\"js\"") throw new Error(`Unknown type ${props.type} in <SCOPES /> component. Please use either "css" or "js"`);
-    const scopeType = props.type.slice(1, -1);
+function isValidScopeType(type: string) {
+    return type == "\"css\"" || type == "\"js\"";
+}
+// Error messages
+function noScopeTypeError() {
+    return new Error(`No scope type defined in the <SCOPES /> component. Please add a type property with either "css" or "js"`);
+}
+function unknownScopeTypeError(unknownType: string) {
+    return new Error(`Unknown type ${unknownType} in <SCOPES /> component. Please use either "css" or "js"`);
+}
+function generateScopeCode(data: { size: number; attr: { [key: string]: string; }; tagname: string; }, scopes: Scope[], isDev: boolean): string {
+    if (!("type" in data.attr)) throw noScopeTypeError();
+    if (!isValidScopeType(data.attr.type)) throw unknownScopeTypeError(data.attr.type);
+    const scopeType = data.attr.type.slice(1, -1);
     let scopesUsed = scopes.filter(scope => scope.type == scopeType);
     const contents = scopesUsed.map(scopeUsed => {
         return {
@@ -52,6 +61,7 @@ export function handleScopes(code: string, scopes: Scope[], isDev: boolean): str
     let output = "";
     let isInPhp = false;
     let isInString: false | "\"" | "'" = false;
+    let skipNext = false;
     for (let charIndex = 0; charIndex < code.length; charIndex++) {
         let match;
         if ((match = code.slice(charIndex).match(REGEX.php.open)) != null && isInString == false) {
@@ -66,30 +76,36 @@ export function handleScopes(code: string, scopes: Scope[], isDev: boolean): str
             charIndex += match[0].length - 1;
             continue;
         }
-        if (isInPhp && isInString == false && code[charIndex] == "\"") {
+        if (isInPhp && isInString == false && code[charIndex] == "\"" && !skipNext) {
             isInString = "\"";
             output += "\"";
             continue;
         }
-        if (isInPhp && isInString == "\"" && code[charIndex] == "\"") {
+        if (isInPhp && isInString == "\"" && code[charIndex] == "\"" && !skipNext) {
             isInString = false;
             output += "\"";
             continue;
         }
-        if (isInPhp && isInString == false && code[charIndex] == "'") {
+        if (isInPhp && isInString == false && code[charIndex] == "'" && !skipNext) {
             isInString = "'";
             output += "'";
             continue;
         }
-        if (isInPhp && isInString == "'" && code[charIndex] == "'") {
+        if (isInPhp && isInString == "'" && code[charIndex] == "'" && !skipNext) {
             isInString = false;
             output += "'";
             continue;
         }
-        if ((match = code.slice(charIndex).match(REGEX.componentTag.scopes)) != null && !isInPhp) {
-            let data = match[0].slice("<SCOPES".length, -2).trim();
-            output += generateScopeCode(data, scopes, isDev);
-            charIndex += match[0].length - 1;
+        if (code[charIndex] == "\\" && isInPhp && isInString != false) {
+            skipNext = true;
+            output += "\\";
+            continue;
+        } else {
+            skipNext = false;
+        }
+        if ((match = isTag("/>", code, charIndex)) != false && match.tagname == "SCOPES" && !isInPhp) {
+            output += generateScopeCode(match, scopes, isDev);
+            charIndex += match.size - 1;
             continue;
         }
         output += code[charIndex];

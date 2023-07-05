@@ -4,8 +4,9 @@ import path from "path";
 import { htxConfig } from "../config/config";
 
 import REGEX from "./regex";
-import parseHtmlAttributes, { toPhpFormat } from "./parse";
+import { toPhpFormat } from "./parse";
 import { Scope, checkForExistingScopes, handleScopes } from "./scopes";
+import { isTag } from "./tagDetection";
 
 function usesFromImportSyntax(importParamaters: string[]): boolean {
     return importParamaters.length >= 3 && importParamaters[1] == "from";
@@ -153,15 +154,13 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         }
 
         // Component open
-        if ((match = code.slice(charIndex).match(REGEX.componentTag.open)) != null && !isInPhp) {
-            let [tagname, ...dataSplit] = match[0].slice(1, -1).trim().split(" ");
-            let data = dataSplit.join(" ").trim();
+        if ((match = isTag(">", code, charIndex)) != false && !isInPhp) {
             componentChildStack.push({
-                component: tagname,
-                attr: parseHtmlAttributes(data),
+                component: match.tagname,
+                attr: match.attr,
                 children: ""
             });
-            charIndex += match[0].length - 1;
+            charIndex += match.size - 1;
             continue;
         }
 
@@ -185,14 +184,12 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         }
 
         // Component single
-        if ((match = code.slice(charIndex).match(REGEX.componentTag.single)) != null && !isInPhp) {
-            let [tagname, ...dataSplit] = match[0].slice(1, -2).trim().split(" ");
-            let data = dataSplit.join(" ").trim();
+        if ((match = isTag("/>", code, charIndex)) != false && !isInPhp) {
             uid++;
-            if (!(tagname in components)) {
-                throw new Error(`Unknown component "${tagname}" in file "${filePath}"`);
+            if (!(match.tagname in components)) {
+                throw new Error(`Unknown component "${match.tagname}" in file "${filePath}"`);
             }
-            let { output: converted, uid: newUid, possibleScopes } = convert(components[tagname].contents, uid, parseHtmlAttributes(data), "", config, components[tagname].relativePath, localComponentName, localUid);
+            let { output: converted, uid: newUid, possibleScopes } = convert(components[match.tagname].contents, uid, match.attr, "", config, components[match.tagname].relativePath, localComponentName, localUid);
             possibleScopes.css.forEach(scope => {
                 possibleScopedCssFiles.add(scope);
             });
@@ -201,7 +198,7 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             });
             uid = newUid;
             addToOutput(converted);
-            charIndex += match[0].length - 1;
+            charIndex += match.size - 1;
             continue;
         }
 
@@ -257,6 +254,7 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         addToOutput(code[charIndex]);
     }
 
+    // auto close php at end of file
     if (isInString && isInPhp) {
         addToOutput(`";?>`);
     } else if (isInPhp) {
@@ -268,12 +266,12 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         existingScopes = checkForExistingScopes(possibleScopedCssFiles, possibleScopedJsFiles);
 
     let finalOutput = (config.environment == "dev") ? `\n<!-- DEBUG: Start ${localComponentName} #${localUid} -->\n` : "";
-    if (Object.keys(props).length > 0) {
-        finalOutput += `<?php ${"$" + config.constant.variable
-            .replace("<component>", localComponentName)
-            .replace("<uid>", localUid.toString())
-            .replace("<variable>", config.constant.props)} = ${toPhpFormat(props, parentComponentName, parentUid, config)}; ?>`;
-    }
+    // add props variable
+    finalOutput += `<?php ${"$" + config.constant.variable
+        .replace("<component>", localComponentName)
+        .replace("<uid>", localUid.toString())
+        .replace("<variable>", config.constant.props)} = ${toPhpFormat(props, parentComponentName, parentUid, config)}; ?>`;
+    // handle scopes (only in root, because it has to be called once and contain all local scripts and styles)
     finalOutput += isRoot ? handleScopes(componentChildStack[0].children, existingScopes as Scope[], config.environment == "dev") : componentChildStack[0].children;
     if (config.environment == "dev") {
         finalOutput += `\n<!-- DEBUG: End ${localComponentName} #${localUid} -->\n`;
@@ -288,7 +286,10 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
     };
 }
 
+function removeEmptyLines(line: string) {
+    return line.replace(/\r/g, "").trim() != "";
+}
 export function convertHtx(contents: string, filePath: string, config: htxConfig): string {
     const converted = convert(contents, 0, {}, "", config, filePath, "", -1, true).output;
-    return converted.split("\n").filter(line => line.replace(/\r/g, "").trim() != "").join("\n");
+    return converted.split("\n").filter(removeEmptyLines).join("\n");
 }

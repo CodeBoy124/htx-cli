@@ -4,8 +4,11 @@
 $name = "user12";
 $name .= "test";
 $GLOBAL_title = "Example page";
+$someArray = [
+    "prefix" => "Name-"
+]
 ?>
 <Layout title=$GLOBAL_title>
     <h1>Hello, there...</h1>
-    <GreetButton name=$name />
+    <GreetButton name=($someArray["prefix"] . $name) />
 </Layout>

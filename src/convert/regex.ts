@@ -12,10 +12,10 @@ export default {
         call: /^[A-Za-z0-9_]+\(/
     },
     importStatement: /^<!-- ?import ([A-Za-z0-9$./_-]+ from )?"[^"\n]+" ?-->/,
+    attributeStart: /^[A-Za-z0-9_\-$]+\=/,
     componentTag: {
-        open: /^<[A-Z][A-Za-z0-9\-_$]*( [^>]*[^/])?>/,
+        open: /^<[A-Z][A-Za-z0-9\-_$]*/,
         close: /^<\/[A-Z][A-Za-z0-9\-_$]*[\n ]*>/,
-        single: /^<[A-Z][A-Za-z0-9\-_$]*( [^>]*)?\/>/,
         children: /^<INNER *\/?>/,
         scopes: /^<SCOPES*( [^>]*)?\/>/
     }
