@@ -44,6 +44,7 @@ export function isTag(type: "/>" | ">", code: string, index: number = 0): false 
 
             let nestLevel = 0;
             let isInString: false | "\"" | "'" = false;
+            let skipNext = false;
 
             let charIndex = 1;
             let output = "";
@@ -69,15 +70,20 @@ export function isTag(type: "/>" | ">", code: string, index: number = 0): false 
                 if (code[partIndex + charIndex] == "]" && isInString == false) {
                     nestLevel--;
                 }
-                if (code[partIndex + charIndex] == "\"" && isInString == false) {
+                if (code[partIndex + charIndex] == "\"" && isInString == false && !skipNext) {
                     isInString = "\"";
-                } else if (code[partIndex + charIndex] == "\"" && isInString == "\"") {
+                } else if (code[partIndex + charIndex] == "\"" && isInString == "\"" && !skipNext) {
                     isInString = false;
                 }
-                if (code[partIndex + charIndex] == "'" && isInString == false) {
+                if (code[partIndex + charIndex] == "'" && isInString == false && !skipNext) {
                     isInString = "'";
-                } else if (code[partIndex + charIndex] == "'" && isInString == "'") {
+                } else if (code[partIndex + charIndex] == "'" && isInString == "'" && !skipNext) {
                     isInString = false;
+                }
+                if (code[partIndex + charIndex] == "\\" && isInString != false) {
+                    skipNext = true;
+                } else {
+                    skipNext = false;
                 }
                 output += code[partIndex + charIndex];
                 charIndex++;

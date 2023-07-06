@@ -107,14 +107,6 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             continue;
         }
 
-        if (isInPhp && isInString != false && code[charIndex] == "\\") {
-            skipNext = true;
-            addToOutput("\\");
-            continue;
-        } else {
-            skipNext = false;
-        }
-
         // import statement
         if ((match = code.slice(charIndex).match(REGEX.importStatement)) != null && !isInPhp) {
             let { name: componentName, file: componentFileName, fileNameWithoutExtension } = parseImportStatement(match[0], config);
@@ -203,14 +195,14 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         }
 
         // Global variable
-        if ((match = code.slice(charIndex).match(REGEX.variable.global)) != null && isInPhp && isInString == false) {
+        if ((match = code.slice(charIndex).match(REGEX.variable.global)) != null && isInPhp && (isInString == false || skipNext == false)) {
             addToOutput("$" + match[0].slice("$GLOBAL_".length));
             charIndex += match[0].length - 1;
             continue;
         }
 
         // Local variable
-        if ((match = code.slice(charIndex).match(REGEX.variable.local)) != null && isInPhp && isInString == false) {
+        if ((match = code.slice(charIndex).match(REGEX.variable.local)) != null && isInPhp && (isInString == false || skipNext == false)) {
             addToOutput("$" + config.constant.variable
                 .replace("<component>", localComponentName)
                 .replace("<uid>", localUid.toString())
@@ -250,6 +242,13 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             }
             charIndex += match[0].length - 1;
             continue;
+        }
+        if (isInPhp && isInString != false && code[charIndex] == "\\") {
+            skipNext = true;
+            addToOutput("\\");
+            continue;
+        } else {
+            skipNext = false;
         }
         addToOutput(code[charIndex]);
     }
