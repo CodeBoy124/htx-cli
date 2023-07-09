@@ -6,6 +6,7 @@ import { isTag } from "./tagDetection";
 
 export type Scope = {
     type: "css" | "js",
+    remote: boolean,
     path: string
 }
 export function checkForExistingScopes(css: Set<string>, js: Set<string>): Scope[] {
@@ -14,6 +15,7 @@ export function checkForExistingScopes(css: Set<string>, js: Set<string>): Scope
         if (fs.existsSync(pathStr)) {
             scopes.push({
                 type: "css",
+                remote: false,
                 path: pathStr
             });
         }
@@ -22,6 +24,7 @@ export function checkForExistingScopes(css: Set<string>, js: Set<string>): Scope
         if (fs.existsSync(pathStr)) {
             scopes.push({
                 type: "js",
+                remote: false,
                 path: pathStr
             });
         }
@@ -44,17 +47,39 @@ function generateScopeCode(data: { size: number; attr: { [key: string]: string; 
     if (!isValidScopeType(data.attr.type)) throw unknownScopeTypeError(data.attr.type);
     const scopeType = data.attr.type.slice(1, -1);
     let scopesUsed = scopes.filter(scope => scope.type == scopeType);
-    const contents = scopesUsed.map(scopeUsed => {
-        return {
-            content: fs.readFileSync(scopeUsed.path, 'utf8'),
-            path: scopeUsed.path
-        };
-    });
+    let remoteScopes: string[] = [];
+    let contents: { content: string, path: string }[] = [];
+    scopesUsed.forEach(scopeUsed => {
+        if (!scopeUsed.remote) {
+            contents.push({
+                content: fs.readFileSync(scopeUsed.path, 'utf8'),
+                path: scopeUsed.path
+            });
+        } else {
+            remoteScopes.push(scopeUsed.path);
+        }
+    })
     const joinedContents = contents.map(content => {
         if (!isDev) return content.content;
         return `\n/* DEBUG: Start scoped ${scopeType} for file: ${path.relative(process.cwd(), content.path)} */\n` + content.content;
     }).join(isDev ? "\n" : "");
-    return scopeType == "css" ? `<style>${joinedContents + (isDev ? "\n" : "")}\n</style>` : `<script>${joinedContents + (isDev ? "\n" : "")}</script>`;
+    return scopeType == "css" ? `${remoteScopes.map(remoteScope => {
+        if (
+            (remoteScope.startsWith("\"") || remoteScope.startsWith("'")) ||
+            (remoteScope.endsWith("\"") || remoteScope.endsWith("'"))
+        ) {
+            remoteScope = remoteScope.slice(1, -1);
+        }
+        return `<link rel="stylesheet" href="${remoteScope}">`;
+    }).join("")}<style>${joinedContents + (isDev ? "\n" : "")}\n</style>` : `${remoteScopes.map(remoteScope => {
+        if (
+            (remoteScope.startsWith("\"") || remoteScope.startsWith("'")) ||
+            (remoteScope.endsWith("\"") || remoteScope.endsWith("'"))
+        ) {
+            remoteScope = remoteScope.slice(1, -1);
+        }
+        return `<script src="${remoteScope}"></script>`;
+    }).join("")}<script>${joinedContents + (isDev ? "\n" : "")}</script>`;
 }
 
 export function handleScopes(code: string, scopes: Scope[], isDev: boolean): string {

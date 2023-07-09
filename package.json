@@ -1,6 +1,6 @@
 {
   "name": "php-htx-cli",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A cli to convert .htx (different components) files to .php",
   "main": "./out/index.js",
   "bin": {

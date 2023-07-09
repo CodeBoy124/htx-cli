@@ -42,6 +42,7 @@ If you have a lot of components you don't want to manually insert all script tag
 Scoped files will be automaticly imported don't have local and global variables, function or anything else.
 You can use the `<SCOPE />` component and set the type attribute to either "css" or "js".
 If you have a component you want to add scoped js and css to you can create a `.js` or `.css` file with the same name, so if your component is called `MyButton.htx` and you import it with `<!-- import "./MyButton" -->` it will also check if a `MyButton.js` or `MyButton.css` exist.
+You can also use `<JS src="yourFile.js" />` or `<CSS src="yourFile.css" />` to import js or css from a url. This only works if you use `/>` at the end.
 
 ### example
 If you want to see what a project could look like you can checkout the example folder.
