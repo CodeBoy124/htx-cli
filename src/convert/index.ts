@@ -34,6 +34,10 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
     possibleScopes: {
         css: Set<string>,
         js: Set<string>
+    },
+    manualScopes: {
+        css: Set<string>,
+        js: Set<string>
     }
 } {
     const localComponentName = path.basename(filePath, "." + config.extension.src);
@@ -62,6 +66,9 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
 
     let possibleScopedCssFiles: Set<string> = new Set();
     let possibleScopedJsFiles: Set<string> = new Set();
+
+    let manualScopedCssFiles: Set<string> = new Set();
+    let manualScopedJsFiles: Set<string> = new Set();
 
     let isInPhp = false;
     let isInString: false | `"` | `'` = false;
@@ -145,6 +152,20 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             continue;
         }
 
+        // Component scoped JS
+        if ((match = isTag("/>", code, charIndex)) != false && match.tagname == "JS" && !isInPhp) {
+            manualScopedJsFiles.add(match.attr.src);
+            charIndex += match.size - 1;
+            continue;
+        }
+
+        // TODO Component scoped CSS
+        if ((match = isTag("/>", code, charIndex)) != false && match.tagname == "CSS" && !isInPhp) {
+            manualScopedCssFiles.add(match.attr.src);
+            charIndex += match.size - 1;
+            continue;
+        }
+
         // Component open
         if ((match = isTag(">", code, charIndex)) != false && !isInPhp) {
             componentChildStack.push({
@@ -162,12 +183,18 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             uid++;
             if (currentChildStackContent?.component == null) throw new Error(`Cannot access component without a name`);
             if (!(currentChildStackContent?.component in components)) throw new Error(`Unknown component "${currentChildStackContent?.component}"`);
-            let { output: converted, uid: newUid, possibleScopes } = convert(components[currentChildStackContent?.component].contents, uid, currentChildStackContent?.attr, currentChildStackContent?.children, config, components[currentChildStackContent?.component].relativePath, localComponentName, localUid);
+            let { output: converted, uid: newUid, possibleScopes, manualScopes } = convert(components[currentChildStackContent?.component].contents, uid, currentChildStackContent?.attr, currentChildStackContent?.children, config, components[currentChildStackContent?.component].relativePath, localComponentName, localUid);
             possibleScopes.css.forEach(scope => {
                 possibleScopedCssFiles.add(scope);
             });
             possibleScopes.js.forEach(scope => {
                 possibleScopedJsFiles.add(scope);
+            });
+            manualScopes.css.forEach(scope => {
+                manualScopedCssFiles.add(scope);
+            });
+            manualScopes.js.forEach(scope => {
+                manualScopedJsFiles.add(scope);
             });
             uid = newUid;
             addToOutput(converted)
@@ -181,12 +208,18 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
             if (!(match.tagname in components)) {
                 throw new Error(`Unknown component "${match.tagname}" in file "${filePath}"`);
             }
-            let { output: converted, uid: newUid, possibleScopes } = convert(components[match.tagname].contents, uid, match.attr, "", config, components[match.tagname].relativePath, localComponentName, localUid);
+            let { output: converted, uid: newUid, possibleScopes, manualScopes } = convert(components[match.tagname].contents, uid, match.attr, "", config, components[match.tagname].relativePath, localComponentName, localUid);
             possibleScopes.css.forEach(scope => {
                 possibleScopedCssFiles.add(scope);
             });
             possibleScopes.js.forEach(scope => {
                 possibleScopedJsFiles.add(scope);
+            });
+            manualScopes.css.forEach(scope => {
+                manualScopedCssFiles.add(scope)
+            });
+            manualScopes.js.forEach(scope => {
+                manualScopedJsFiles.add(scope)
             });
             uid = newUid;
             addToOutput(converted);
@@ -265,9 +298,26 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         possibleScopedJsFiles.add(filePath.slice(0, -(("." + config.extension.src).length)) + ".js");
     }
 
-    let existingScopes;
-    if (isRoot)
+    const manualFileToScope = function (manualFile: string, scopeType: "css" | "js"): Scope {
+        return {
+            type: scopeType,
+            remote: true,
+            path: manualFile
+        };
+    }
+
+    let existingScopes: Scope[] | undefined;
+    if (isRoot) {
         existingScopes = checkForExistingScopes(possibleScopedCssFiles, possibleScopedJsFiles);
+        existingScopes?.push(
+            ...Array.from(manualScopedCssFiles)
+                .map(manualFile => manualFileToScope(manualFile, "css"))
+        );
+        existingScopes?.push(
+            ...Array.from(manualScopedJsFiles)
+                .map(manualFile => manualFileToScope(manualFile, "js"))
+        );
+    }
 
     let finalOutput = (config.environment == "dev") ? `\n<!-- DEBUG: Start ${localComponentName} #${localUid} -->\n` : "";
     // add props variable
@@ -286,6 +336,10 @@ function convert(code: string, uid: number, props: { [index: string]: any }, chi
         possibleScopes: {
             css: possibleScopedCssFiles,
             js: possibleScopedJsFiles
+        },
+        manualScopes: {
+            css: manualScopedCssFiles,
+            js: manualScopedJsFiles
         }
     };
 }
