@@ -1,52 +1,68 @@
 # htx-cli
 A cli to convert htx files (components) to regular php.
 
-## installation
-run `npm install -g php-htx-cli` to install the cli.
+* [Documentation/Tutorial](https://codeboy124.github.io/htx-docs/)
 
-## cli usage
-You can run `htx init` to create a `htx_config.json` file that you can configure for your liking.
-After that you can run `htx` or `htx run` to scan for htx files and convert them to php.
-You can also use `htx watch` or `htx watch ./path/to/folder/to/watch/` to detect changes and automaticly convert everything
+## Short example
+Here is a small example with a page that has bootstrap and contains a button that displays a message and some text
 
-## htx file usage
-### importing components
-You can import a component using one of two ways.
-You can use the `<!-- import ComponentAlias from "./path/to/file" -->` syntax to import with an alias.
-You can also use the `<!-- import "./path/to/file" -->` syntax to just use the file name as the component name
+src/pages/index.htx
+```html
+<!-- import DefaultLayout from "../layouts/Default" -->
+<!-- import "../other/HelloWorldButton" -->
+<DefaultLayout title=strtoupper("Some Page")>
+    <HelloWorldButton />
+    <p>
+        Some page
+    </p>
+</DefaultLayout>
+```
 
-### using components
-You can use the components as regular html tags with the addition of one thing. You can pass variables to the component by doing `attribute-name=$myVariable`.
-The system that the program uses keeps track of what is inside a string and how 'nested' some code is. If you want to add two variables you can't do the following: `added=$a + $b`, because of the spaces that make the program expect another attribute. Instead you can do `added=$a+$b` or `added=($a + $b)`. Every value of a property on a component is just php, so you can still use `"text"` and `7` numbers while also allowing you to use php `$a+$b`.
+src/layouts/Default.htx
+```php
+<?php
+if(!isset($props["title"])) $props["title"] = "Page";
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $props["title"] ?></title>
+    <SCOPES type="css" />
 
-### accessing properties/attributes inside components
-You can access the `$props` variable (or whatever name you have in your config in `constant.props`).
-This variable is a associative array.
+    <CSS src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" />
+    <JS src="https://code.jquery.com/jquery-3.3.1.slim.min.js" />
+    <JS src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" />
+    <JS src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" />
+</head>
+<body>
+    <INNER />
+    <SCOPES type="js" />
+</body>
+</html>
+```
 
-### accessing the components children
-You can use the `<INNER />` tag inside html.
-The converter will replace this with it's actual children
+src/other/HelloWorldButton.htx
+```html
+<button type="button" class="btn btn-primary" onclick="helloWorldMessage()">Hello, World?</button>
+```
 
-### defining global data
-By default all components use local data that is not meant to be accessed by any other component.
-You can also define global data like this `$GLOBAL_myVariable`.
-This is data you can access inside any component inside a page
+src/other/HelloWorldButton.js
+```js
+function helloWorldMessage(){
+    alert("Hello, World!");
+}
+```
 
-### global and local functions
-When you define a function inside a htx file it will be marked as local.
-If you call a function that is not defined in the htx file it will be global.
-If you create a function and want it to be global you can just prefix it with `GLOBAL_` just like with variables
-
-### Adding CSS and JS
-If you have a lot of components you don't want to manually insert all script tags inside your pages, so I created scopes.
-Scoped files will be automaticly imported don't have local and global variables, function or anything else.
-You can use the `<SCOPE />` component and set the type attribute to either "css" or "js".
-If you have a component you want to add scoped js and css to you can create a `.js` or `.css` file with the same name, so if your component is called `MyButton.htx` and you import it with `<!-- import "./MyButton" -->` it will also check if a `MyButton.js` or `MyButton.css` exist.
-You can also use `<JS src="yourFile.js" />` or `<CSS src="yourFile.css" />` to import js or css from a url. This only works if you use `/>` at the end.
-
-### example
-If you want to see what a project could look like you can checkout the example folder.
-It might give you a better idea what everything does.
+If you have Htx installed you can run the following to convert the code and run it with php. This uses the default settings, but they can be changed (see documentation)
+```shell
+htx
+cd out
+php -S localhost:3000
+cd ../
+```
+Once it runs you should be able to open [http://localhost:3000/]
 
 ## contributing
 Feel free to contribute.
